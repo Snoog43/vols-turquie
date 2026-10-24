@@ -182,6 +182,18 @@ async function charger(viaApi) {
 const fdate = s => { const d = new Date(s + "T12:00:00"); return `${JOURS[(d.getDay() + 6) % 7]} ${d.getDate()}/${String(d.getMonth() + 1).padStart(2, "0")}` };
 const nom = c => AEROPORTS[c] || c;
 
+// liens pour vérifier le même aller-retour à la main sur d'autres comparateurs
+function comparer(r) {
+  const o = r.origine, d = r.dest, a = r.aller, b = r.retour, yymmdd = s => s.slice(2).replaceAll("-", "");
+  const liens = [
+    ["Google", r.url],
+    ["Skyscanner", `https://www.skyscanner.fr/transport/vols/${o.toLowerCase()}/${d.toLowerCase()}/${yymmdd(a)}/${yymmdd(b)}/`],
+    ["Momondo", `https://www.momondo.fr/flight-search/${o}-${d}/${a}/${b}`],
+    ["Kiwi", `https://www.kiwi.com/fr/search/results/${o}/${d}/${a}/${b}`],
+  ];
+  return liens.map(([n, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${n}</a>`).join(" · ");
+}
+
 function afficher() {
   const data = window.DATA, p = data.params;
   const fDirect = $("fdirect")?.checked || false, fDest = $("fdest")?.value || "";
@@ -214,7 +226,7 @@ function afficher() {
 
   const vus = new Set(), top = [];
   for (const r of R) { const k = [r.origine, r.dest, r.aller, r.retour].join(); if (vus.has(k)) continue; vus.add(k); top.push(r); if (top.length >= 30) break }
-  const lignes = top.map(r => `<tr><td class="num">${r.prix} €</td><td>${esc(nom(r.origine))} → ${r.dest}</td><td>${fdate(r.aller)}</td><td>${fdate(r.retour)}</td><td>${esc(r.compagnies.join(", "))}</td><td>${r.escales ? r.escales + " escale(s)" : "direct"}</td><td>${esc(r.segments.join(" · "))}</td><td><a href="${esc(r.url)}" target="_blank" rel="noopener">voir</a></td></tr>`).join("");
+  const lignes = top.map(r => `<tr><td class="num">${r.prix} €</td><td>${esc(nom(r.origine))} → ${r.dest}</td><td>${fdate(r.aller)}</td><td>${fdate(r.retour)}</td><td>${esc(r.compagnies.join(", "))}</td><td>${r.escales ? r.escales + " escale(s)" : "direct"}</td><td>${esc(r.segments.join(" · "))}</td><td>${comparer(r)}</td></tr>`).join("");
 
   $("res").innerHTML = `
   <section>
@@ -228,7 +240,7 @@ function afficher() {
   </section>
   ${cals}
   <section><h2>Les meilleures combinaisons</h2><div class="tw"><table>
-    <tr><th>Prix A/R</th><th>Trajet</th><th>Aller</th><th>Retour</th><th>Compagnie (aller)</th><th>Escales</th><th>Horaires aller</th><th></th></tr>${lignes}
+    <tr><th>Prix A/R</th><th>Trajet</th><th>Aller</th><th>Retour</th><th>Compagnie (aller)</th><th>Escales</th><th>Horaires aller</th><th>Comparer</th></tr>${lignes}
   </table></div>
   <p class="note">Prix pour 1 adulte avec bagage cabine de base : chez Pegasus, AJet ou Transavia la valise en soute est en plus. Les prix bougent : vérifie sur le site de la compagnie avant de réserver.</p></section>`;
   $("fdirect").onchange = afficher;
