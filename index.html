@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Vols Istanbul</title>
+<title>Vols pas chers</title>
 <style>
 :root{--bg:#faf9f6;--fg:#1d1d1b;--mut:#6b6b66;--card:#fff;--line:#e4e2dc;--acc:#1a6b5a;--accfg:#fff;--warn:#9a5b00;
 --n0:#cfeee2;--n1:#e3f1d0;--n2:#f5ecc6;--n3:#f7d9bf;--n4:#f3c3bd}
@@ -24,6 +24,9 @@ legend{font-weight:600;font-size:13px;color:var(--mut);margin-bottom:6px}
 .chips input{accent-color:var(--acc)}
 .ligne{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
 .ligne label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);gap:4px}
+.lieux label{flex:1 1 260px}
+.lieux input{width:100%}
+#resolus{margin:8px 0 12px}
 input[type=month],input[type=text],input[type=password],select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
 button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 18px;background:var(--acc);color:var(--accfg);cursor:pointer}
 button:disabled{opacity:.5;cursor:default}
@@ -58,14 +61,18 @@ a{color:var(--acc)}
 </head>
 <body>
 <main>
-<h1>Vols vers Istanbul</h1>
-<p class="sous">Aller-retour depuis la France, prix Google Flights pour chaque jour du mois.</p>
+<h1>Vols pas chers</h1>
+<p class="sous">Aller-retour vers n'importe quel pays ou ville, prix Google Flights pour chaque jour du mois.</p>
 
 <section>
   <h2>Nouvelle recherche</h2>
   <form id="form">
-    <fieldset><legend>Départ</legend><div class="chips" id="origines"></div></fieldset>
-    <fieldset><legend>Arrivée</legend><div class="chips" id="dests"></div></fieldset>
+    <div class="ligne lieux">
+      <label>Départ<input type="text" id="depart" list="lieux" value="Paris, Marseille, Montpellier" autocomplete="off"></label>
+      <label>Arrivée<input type="text" id="arrivee" list="lieux" value="Istanbul" autocomplete="off"></label>
+    </div>
+    <p class="note" id="resolus"></p>
+    <datalist id="lieux"></datalist>
     <div class="ligne">
       <label>Mois de départ<input type="month" id="mois" value="2027-02"></label>
       <label>Durées de séjour (jours)<input type="text" id="sejours" value="12,14,16" size="10"></label>
@@ -94,11 +101,48 @@ a{color:var(--acc)}
 </main>
 
 <script>
-const AEROPORTS = {
-  PAR: "Paris (CDG/Orly/Beauvais)", MPL: "Montpellier", FNI: "Nîmes", MRS: "Marseille",
-  LYS: "Lyon", TLS: "Toulouse", IST: "Istanbul Aéroport (IST)", SAW: "Istanbul Sabiha Gökçen (SAW)"
+// pays et villes -> aéroports interrogés (les codes de ville comme PAR ou LON couvrent tous leurs aéroports)
+const LIEUX = {
+  "France": "PAR,LYS,MRS,NCE,TLS,BOD,NTE", "Paris": "PAR", "Marseille": "MRS", "Montpellier": "MPL", "Nîmes": "FNI",
+  "Lyon": "LYS", "Toulouse": "TLS", "Nice": "NCE", "Bordeaux": "BOD", "Nantes": "NTE", "Lille": "LIL", "Strasbourg": "SXB",
+  "Belgique": "BRU,CRL", "Bruxelles": "BRU", "Suisse": "GVA,ZRH,BSL", "Genève": "GVA", "Luxembourg": "LUX",
+  "Turquie": "IST,SAW,AYT,ADB,ESB,DLM,BJV", "Istanbul": "IST,SAW", "Antalya": "AYT", "Izmir": "ADB", "Ankara": "ESB",
+  "Espagne": "MAD,BCN,AGP,PMI,VLC,ALC", "Madrid": "MAD", "Barcelone": "BCN", "Malaga": "AGP",
+  "Portugal": "LIS,OPO,FAO", "Lisbonne": "LIS", "Porto": "OPO",
+  "Italie": "ROM,MIL,NAP,VCE,BLQ", "Rome": "ROM", "Milan": "MIL", "Naples": "NAP", "Venise": "VCE",
+  "Allemagne": "BER,FRA,MUC", "Berlin": "BER", "Royaume-Uni": "LON,MAN,EDI", "Londres": "LON",
+  "Pays-Bas": "AMS", "Amsterdam": "AMS", "Irlande": "DUB", "Islande": "KEF", "Pologne": "WAW,KRK",
+  "Hongrie": "BUD", "Budapest": "BUD", "Tchéquie": "PRG", "Prague": "PRG", "Croatie": "ZAG,SPU,DBV",
+  "Grèce": "ATH,SKG,HER,RHO", "Athènes": "ATH", "Chypre": "LCA,PFO", "Géorgie": "TBS,KUT", "Albanie": "TIA",
+  "Maroc": "CMN,RAK,AGA,FEZ,TNG", "Marrakech": "RAK", "Casablanca": "CMN", "Tunisie": "TUN,DJE,MIR", "Tunis": "TUN",
+  "Algérie": "ALG,ORN,CZL", "Alger": "ALG", "Égypte": "CAI,HRG,SSH", "Le Caire": "CAI", "Sénégal": "DSS", "Dakar": "DSS",
+  "Côte d'Ivoire": "ABJ", "Maurice": "MRU", "Madagascar": "TNR", "La Réunion": "RUN",
+  "Israël": "TLV", "Jordanie": "AMM", "Liban": "BEY", "Émirats": "DXB,AUH", "Dubaï": "DXB", "Qatar": "DOH",
+  "Inde": "DEL,BOM,GOI", "Thaïlande": "BKK,HKT,CNX", "Bangkok": "BKK", "Vietnam": "SGN,HAN", "Indonésie": "DPS,CGK", "Bali": "DPS",
+  "Japon": "TYO,OSA", "Tokyo": "TYO", "Corée du Sud": "SEL", "Chine": "BJS,SHA", "Singapour": "SIN",
+  "États-Unis": "NYC,LAX,MIA,SFO,CHI", "New York": "NYC", "Miami": "MIA", "Canada": "YMQ,YTO,YVR", "Montréal": "YMQ",
+  "Mexique": "MEX,CUN", "Cuba": "HAV", "Brésil": "SAO,RIO", "Colombie": "BOG", "Pérou": "LIM", "Argentine": "BUE",
+  "Guadeloupe": "PTP", "Martinique": "FDF", "Australie": "SYD,MEL",
 };
-const DEFAUT_O = ["PAR", "MPL", "FNI", "MRS"], DEFAUT_D = ["IST", "SAW"];
+const NOMS = {};
+// les villes sont listées après leur pays : elles remplacent le nom du pays pour leur code
+for (const [nom, codes] of Object.entries(LIEUX)) if (!codes.includes(",")) NOMS[codes] = nom;
+Object.assign(NOMS, { PAR: "Paris (CDG/Orly/Beauvais)", IST: "Istanbul Aéroport", SAW: "Istanbul Sabiha Gökçen" });
+const AEROPORTS = NOMS;
+const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+const LIEUX_N = Object.fromEntries(Object.entries(LIEUX).map(([k, v]) => [norm(k), v.split(",")]));
+
+// "Turquie, MRS, lyon" -> { codes: [...], inconnus: [...] }
+function resoudre(texte) {
+  const codes = new Set(), inconnus = [];
+  for (const t of texte.split(/[,;+]/).map(s => s.trim()).filter(Boolean)) {
+    const trouve = LIEUX_N[norm(t)];
+    if (trouve) trouve.forEach(c => codes.add(c));
+    else if (/^[a-z]{3}$/i.test(t)) codes.add(t.toUpperCase());
+    else inconnus.push(t);
+  }
+  return { codes: [...codes], inconnus };
+}
 const JOURS = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
 // dépôt déduit de l'adresse (snoog43.github.io/vols-turquie/)
 const OWNER = location.hostname.endsWith("github.io") ? location.hostname.split(".")[0] : "Snoog43";
@@ -110,30 +154,44 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">"
 function lire(k) { try { return localStorage.getItem(k) } catch { return null } }
 function ecrire(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v) } catch {} }
 
-function chips(el, codes, coches) {
-  $(el).innerHTML = codes.map(c =>
-    `<label><input type="checkbox" value="${c}" ${coches.includes(c) ? "checked" : ""}> ${esc(AEROPORTS[c])}</label>`).join("");
+$("lieux").innerHTML = Object.keys(LIEUX).map(k => `<option value="${esc(k)}">`).join("");
+for (const k of ["depart", "arrivee", "mois", "sejours"]) {
+  const v = lire("f_" + k);
+  if (v) $(k).value = v;
 }
-chips("origines", ["PAR", "MPL", "FNI", "MRS", "LYS", "TLS"], DEFAUT_O);
-chips("dests", ["IST", "SAW"], DEFAUT_D);
+
+const SEJ = () => $("sejours").value.split(/[ ,;]+/).map(Number).filter(n => n > 0 && n < 60);
+const nbRecherches = (o, d) => o.length * d.length * SEJ().length * 30;
+const MAX_RECHERCHES = 5000;
+
+function apercu() {
+  const o = resoudre($("depart").value), d = resoudre($("arrivee").value), n = nbRecherches(o.codes, d.codes);
+  const inc = [...o.inconnus, ...d.inconnus];
+  $("resolus").innerHTML = `Aéroports : ${esc(o.codes.join(", ") || "?")} → ${esc(d.codes.join(", ") || "?")}`
+    + ` · environ ${n} recherches (${Math.max(1, Math.round(n / 65))} min)`
+    + (n > MAX_RECHERCHES ? ` · <b>trop : réduis le nombre d'aéroports ou de durées</b>` : "")
+    + (inc.length ? ` · inconnu : ${esc(inc.join(", "))} (mets le code aéroport à 3 lettres)` : "");
+}
+for (const k of ["depart", "arrivee", "sejours"]) $(k).addEventListener("input", apercu);
+apercu();
 $("nomdepot").textContent = `${OWNER}/${REPO}`;
 $("token").value = lire("gh_token") || "";
 $("savetok").onclick = () => { ecrire("gh_token", $("token").value.trim() || null); etat("Clé enregistrée dans ce navigateur.") };
 $("deltok").onclick = () => { ecrire("gh_token", null); $("token").value = ""; etat("Clé effacée.") };
 
 function etat(msg, err) { $("etat").textContent = msg; $("etat").className = err ? "err" : "" }
-const coches = el => [...$(el).querySelectorAll("input:checked")].map(i => i.value);
 const token = () => lire("gh_token") || $("token").value.trim();
 const gh = (path, opts = {}) => fetch(API + path, { ...opts, headers: {
   Accept: "application/vnd.github+json", Authorization: `Bearer ${token()}`, ...(opts.headers || {}) } });
 
 $("form").onsubmit = async ev => {
   ev.preventDefault();
-  const o = coches("origines"), d = coches("dests");
-  const sej = $("sejours").value.split(/[ ,;]+/).map(Number).filter(n => n > 0 && n < 60);
-  if (!o.length || !d.length || !sej.length || !$("mois").value) return etat("Choisis au moins un départ, une arrivée, un mois et une durée.", true);
+  const o = resoudre($("depart").value).codes, d = resoudre($("arrivee").value).codes, sej = SEJ();
+  if (!o.length || !d.length || !sej.length || !$("mois").value) return etat("Indique au moins un départ, une arrivée, un mois et une durée.", true);
+  const nb = nbRecherches(o, d);
+  if (nb > MAX_RECHERCHES) return etat(`${nb} recherches, c'est trop (maximum ${MAX_RECHERCHES}). Réduis les aéroports ou les durées.`, true);
   if (!token()) { $("cle").open = true; return etat("Il faut d'abord enregistrer ta clé GitHub (ci-dessous).", true) }
-  const nb = o.length * d.length * sej.length * 30;
+  for (const k of ["depart", "arrivee", "mois", "sejours"]) ecrire("f_" + k, $(k).value);
   $("go").disabled = true;
   const debut = new Date();
   etat(`Lancement du robot (${nb} recherches environ)…`);
@@ -156,7 +214,7 @@ async function suivre(debut) {
     } catch { continue }
     if (!run || new Date(run.created_at) < new Date(debut - 60000)) { etat("En attente du démarrage du robot…"); continue }
     const min = Math.round((Date.now() - debut) / 60000);
-    if (run.status !== "completed") { etat(`Recherche en cours… ${min} min (en général 5 à 15 min). Tu peux laisser la page ouverte.`); continue }
+    if (run.status !== "completed") { etat(`Recherche en cours… ${min} min (environ 1 min pour 65 recherches). Tu peux fermer la page et revenir plus tard.`); continue }
     break;
   }
   $("go").disabled = false;
@@ -226,7 +284,7 @@ function afficher() {
 
   const vus = new Set(), top = [];
   for (const r of R) { const k = [r.origine, r.dest, r.aller, r.retour].join(); if (vus.has(k)) continue; vus.add(k); top.push(r); if (top.length >= 30) break }
-  const lignes = top.map(r => `<tr><td class="num">${r.prix} €</td><td>${esc(nom(r.origine))} → ${r.dest}</td><td>${fdate(r.aller)}</td><td>${fdate(r.retour)}</td><td>${esc(r.compagnies.join(", "))}</td><td>${r.escales ? r.escales + " escale(s)" : "direct"}</td><td>${esc(r.segments.join(" · "))}</td><td>${comparer(r)}</td></tr>`).join("");
+  const lignes = top.map(r => `<tr><td class="num">${r.prix} €</td><td>${esc(nom(r.origine))} → ${esc(nom(r.dest))}</td><td>${fdate(r.aller)}</td><td>${fdate(r.retour)}</td><td>${esc(r.compagnies.join(", "))}</td><td>${r.escales ? r.escales + " escale(s)" : "direct"}</td><td>${esc(r.segments.join(" · "))}</td><td>${comparer(r)}</td></tr>`).join("");
 
   $("res").innerHTML = `
   <section>
@@ -242,7 +300,7 @@ function afficher() {
   <section><h2>Les meilleures combinaisons</h2><div class="tw"><table>
     <tr><th>Prix A/R</th><th>Trajet</th><th>Aller</th><th>Retour</th><th>Compagnie (aller)</th><th>Escales</th><th>Horaires aller</th><th>Comparer</th></tr>${lignes}
   </table></div>
-  <p class="note">Prix pour 1 adulte avec bagage cabine de base : chez Pegasus, AJet ou Transavia la valise en soute est en plus. Les prix bougent : vérifie sur le site de la compagnie avant de réserver.</p></section>`;
+  <p class="note">Prix pour 1 adulte avec bagage cabine de base : chez les low-cost (Pegasus, Ryanair, Transavia…) la valise en soute est en plus. Les prix bougent : vérifie sur le site de la compagnie avant de réserver.</p></section>`;
   $("fdirect").onchange = afficher;
   $("fdest").onchange = afficher;
 }
