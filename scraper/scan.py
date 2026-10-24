@@ -99,7 +99,12 @@ def main():
     ap.add_argument("--mois", default="2027-02")
     ap.add_argument("--sejours", default="12,14,16")
     ap.add_argument("--sortie", default=os.path.join(os.path.dirname(__file__), "..", "data", "resultats.json"))
+    ap.add_argument("--reprendre", action="store_true", help="relancer la dernière recherche enregistrée")
     a = ap.parse_args()
+    if a.reprendre and os.path.exists(a.sortie):
+        p = json.load(open(a.sortie, encoding="utf-8"))["params"]
+        a.origines, a.dests, a.mois = ",".join(p["origines"]), ",".join(p["dests"]), p["mois"]
+        a.sejours = ",".join(map(str, p["sejours"]))
 
     origines = [x.strip().upper() for x in a.origines.split(",") if x.strip()]
     dests = [x.strip().upper() for x in a.dests.split(",") if x.strip()]

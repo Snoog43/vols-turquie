@@ -16,7 +16,7 @@ on:
         description: Durées de séjour en jours
         default: "12,14,16"
   schedule:
-    - cron: "0 5 * * *"  # chaque matin vers 6 h (heure de Paris)
+    - cron: "0 5 * * *"  # chaque matin vers 6 h (heure de Paris), relance la dernière recherche
 
 permissions:
   contents: write
@@ -35,7 +35,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -q fast-flights==3.1.0 typing_extensions
+      - name: Relancer la dernière recherche (passage du matin)
+        if: github.event_name == 'schedule'
+        run: python scraper/scan.py --reprendre
       - name: Scraper Google Flights
+        if: github.event_name != 'schedule'
         env:
           ORIGINES: ${{ inputs.origines || 'PAR,MPL,FNI,MRS' }}
           DESTS: ${{ inputs.dests || 'IST,SAW' }}
