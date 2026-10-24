@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vols Istanbul</title>
+<style>
+:root{--bg:#faf9f6;--fg:#1d1d1b;--mut:#6b6b66;--card:#fff;--line:#e4e2dc;--acc:#1a6b5a;--accfg:#fff;--warn:#9a5b00;
+--n0:#cfeee2;--n1:#e3f1d0;--n2:#f5ecc6;--n3:#f7d9bf;--n4:#f3c3bd}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--fg:#ecebe6;--mut:#9a9993;--card:#1f1f1d;--line:#33332f;--acc:#6fd0b4;--accfg:#10201b;--warn:#f0b35a;
+--n0:#1f4a3d;--n1:#34482a;--n2:#4d4527;--n3:#55392a;--n4:#5a2e2b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:940px;margin:0 auto;padding:24px 16px 56px}
+h1{font-size:26px;margin:0 0 4px}
+.sous{color:var(--mut);margin:0 0 20px}
+section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+h2{font-size:17px;margin:0 0 12px}
+h2 small{color:var(--acc);font-weight:600;margin-left:6px}
+fieldset{border:0;padding:0;margin:0 0 12px}
+legend{font-weight:600;font-size:13px;color:var(--mut);margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips label{border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;user-select:none}
+.chips input{accent-color:var(--acc)}
+.ligne{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.ligne label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);gap:4px}
+input[type=month],input[type=text],input[type=password],select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 18px;background:var(--acc);color:var(--accfg);cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+button.sec{background:transparent;color:var(--acc);border:1px solid var(--line)}
+#etat{margin-top:12px;font-size:14px}
+#etat.err{color:var(--warn)}
+details{margin-top:12px;font-size:14px}
+details summary{cursor:pointer;color:var(--mut)}
+details ol{padding-left:20px;margin:8px 0}
+.resume{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tuile{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.tuile b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.tuile span{font-size:13px;color:var(--mut)}
+.grille{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.jh{font-size:12px;color:var(--mut);text-align:center}
+.c{border-radius:6px;padding:6px 2px;text-align:center;text-decoration:none;color:var(--fg);display:flex;flex-direction:column;min-width:0}
+.c .j{font-size:11px;color:var(--mut)}
+.c .p{font-weight:600;font-variant-numeric:tabular-nums;font-size:13px}
+.vide{opacity:.4}
+.n0{background:var(--n0)}.n1{background:var(--n1)}.n2{background:var(--n2)}.n3{background:var(--n3)}.n4{background:var(--n4)}
+a.c:hover{outline:2px solid var(--acc)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mut);font-weight:500}
+.num{font-weight:700;font-variant-numeric:tabular-nums}
+a{color:var(--acc)}
+.note{color:var(--mut);font-size:13px}
+.filtres{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px;font-size:14px}
+@media (max-width:520px){.c .p{font-size:11px}.c{padding:5px 0}}
+</style>
+</head>
+<body>
+<main>
+<h1>Vols vers Istanbul</h1>
+<p class="sous">Aller-retour depuis la France, prix Google Flights pour chaque jour du mois.</p>
+
+<section>
+  <h2>Nouvelle recherche</h2>
+  <form id="form">
+    <fieldset><legend>Départ</legend><div class="chips" id="origines"></div></fieldset>
+    <fieldset><legend>Arrivée</legend><div class="chips" id="dests"></div></fieldset>
+    <div class="ligne">
+      <label>Mois de départ<input type="month" id="mois" value="2027-02"></label>
+      <label>Durées de séjour (jours)<input type="text" id="sejours" value="12,14,16" size="10"></label>
+      <button type="submit" id="go">Rechercher</button>
+    </div>
+  </form>
+  <div id="etat"></div>
+  <details id="cle">
+    <summary>Clé GitHub (à faire une seule fois)</summary>
+    <p>Le bouton lance un robot sur GitHub qui fait les recherches (5 à 15 min). Pour qu'il ait le droit de le lancer :</p>
+    <ol>
+      <li>Ouvre <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li>
+      <li>Nom : « vols », expiration : 1 an. <i>Repository access</i> : <b>Only select repositories</b> → <b id="nomdepot"></b>.</li>
+      <li><i>Permissions</i> : <b>Actions</b> = Read and write, <b>Contents</b> = Read-only. Puis <i>Generate token</i>.</li>
+      <li>Colle la clé ici. Elle reste uniquement dans ce navigateur.</li>
+    </ol>
+    <div class="ligne">
+      <input type="password" id="token" placeholder="github_pat_…" size="40" autocomplete="off">
+      <button type="button" class="sec" id="savetok">Enregistrer</button>
+      <button type="button" class="sec" id="deltok">Effacer</button>
+    </div>
+  </details>
+</section>
+
+<div id="res"></div>
+</main>
+
+<script>
+const AEROPORTS = {
+  PAR: "Paris (CDG/Orly/Beauvais)", MPL: "Montpellier", FNI: "Nîmes", MRS: "Marseille",
+  LYS: "Lyon", TLS: "Toulouse", IST: "Istanbul Aéroport (IST)", SAW: "Istanbul Sabiha Gökçen (SAW)"
+};
+const DEFAUT_O = ["PAR", "MPL", "FNI", "MRS"], DEFAUT_D = ["IST", "SAW"];
+const JOURS = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
+// dépôt déduit de l'adresse (snoog43.github.io/vols-turquie/)
+const OWNER = location.hostname.endsWith("github.io") ? location.hostname.split(".")[0] : "Snoog43";
+const REPO = location.pathname.split("/").filter(Boolean)[0] || "vols-turquie";
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function lire(k) { try { return localStorage.getItem(k) } catch { return null } }
+function ecrire(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v) } catch {} }
+
+function chips(el, codes, coches) {
+  $(el).innerHTML = codes.map(c =>
+    `<label><input type="checkbox" value="${c}" ${coches.includes(c) ? "checked" : ""}> ${esc(AEROPORTS[c])}</label>`).join("");
+}
+chips("origines", ["PAR", "MPL", "FNI", "MRS", "LYS", "TLS"], DEFAUT_O);
+chips("dests", ["IST", "SAW"], DEFAUT_D);
+$("nomdepot").textContent = `${OWNER}/${REPO}`;
+$("token").value = lire("gh_token") || "";
+$("savetok").onclick = () => { ecrire("gh_token", $("token").value.trim() || null); etat("Clé enregistrée dans ce navigateur.") };
+$("deltok").onclick = () => { ecrire("gh_token", null); $("token").value = ""; etat("Clé effacée.") };
+
+function etat(msg, err) { $("etat").textContent = msg; $("etat").className = err ? "err" : "" }
+const coches = el => [...$(el).querySelectorAll("input:checked")].map(i => i.value);
+const token = () => lire("gh_token") || $("token").value.trim();
+const gh = (path, opts = {}) => fetch(API + path, { ...opts, headers: {
+  Accept: "application/vnd.github+json", Authorization: `Bearer ${token()}`, ...(opts.headers || {}) } });
+
+$("form").onsubmit = async ev => {
+  ev.preventDefault();
+  const o = coches("origines"), d = coches("dests");
+  const sej = $("sejours").value.split(/[ ,;]+/).map(Number).filter(n => n > 0 && n < 60);
+  if (!o.length || !d.length || !sej.length || !$("mois").value) return etat("Choisis au moins un départ, une arrivée, un mois et une durée.", true);
+  if (!token()) { $("cle").open = true; return etat("Il faut d'abord enregistrer ta clé GitHub (ci-dessous).", true) }
+  const nb = o.length * d.length * sej.length * 30;
+  $("go").disabled = true;
+  const debut = new Date();
+  etat(`Lancement du robot (${nb} recherches environ)…`);
+  const r = await gh("/actions/workflows/recherche.yml/dispatches", { method: "POST",
+    body: JSON.stringify({ ref: "main", inputs: { origines: o.join(","), dests: d.join(","), mois: $("mois").value, sejours: sej.join(",") } }) });
+  if (r.status !== 204) {
+    $("go").disabled = false;
+    return etat(`GitHub a refusé (${r.status}). Vérifie la clé et ses permissions.`, true);
+  }
+  suivre(debut);
+};
+
+async function suivre(debut) {
+  let run;
+  for (;;) {
+    await new Promise(r => setTimeout(r, 8000));
+    try {
+      const r = await gh("/actions/workflows/recherche.yml/runs?event=workflow_dispatch&per_page=1");
+      run = (await r.json()).workflow_runs?.[0];
+    } catch { continue }
+    if (!run || new Date(run.created_at) < new Date(debut - 60000)) { etat("En attente du démarrage du robot…"); continue }
+    const min = Math.round((Date.now() - debut) / 60000);
+    if (run.status !== "completed") { etat(`Recherche en cours… ${min} min (en général 5 à 15 min). Tu peux laisser la page ouverte.`); continue }
+    break;
+  }
+  $("go").disabled = false;
+  if (run.conclusion !== "success") return etat(`Le robot a échoué (${run.conclusion}). Détails : ${run.html_url}`, true);
+  etat("Terminé ✔");
+  charger(true);
+}
+
+async function charger(viaApi) {
+  let data;
+  try {
+    if (viaApi && token()) {
+      const r = await gh("/contents/data/resultats.json?ref=main", { headers: { Accept: "application/vnd.github.raw+json" } });
+      data = await r.json();
+    } else {
+      data = await (await fetch("data/resultats.json?t=" + Date.now())).json();
+    }
+  } catch { $("res").innerHTML = `<section><p class="note">Pas encore de résultats. Lance une recherche.</p></section>`; return }
+  window.DATA = data;
+  afficher();
+}
+
+const fdate = s => { const d = new Date(s + "T12:00:00"); return `${JOURS[(d.getDay() + 6) % 7]} ${d.getDate()}/${String(d.getMonth() + 1).padStart(2, "0")}` };
+const nom = c => AEROPORTS[c] || c;
+
+function afficher() {
+  const data = window.DATA, p = data.params;
+  const fDirect = $("fdirect")?.checked || false, fDest = $("fdest")?.value || "";
+  const R = data.resultats.filter(r => (!fDirect || r.escales === 0) && (!fDest || r.dest === fDest));
+  const best = {};
+  for (const r of R) { const k = r.origine + r.aller; if (!best[k] || r.prix < best[k].prix) best[k] = r }
+  const prix = Object.values(best).map(r => r.prix);
+  const pmin = Math.min(...prix), pmax = Math.max(...prix);
+  const niv = x => pmax === pmin ? 0 : Math.min(4, Math.floor((x - pmin) / (pmax - pmin) * 5));
+  const [an, mo] = p.mois.split("-").map(Number);
+  const nj = new Date(an, mo, 0).getDate(), decal = (new Date(an, mo - 1, 1).getDay() + 6) % 7;
+  const quand = new Date(data.genere).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
+
+  const tuiles = p.origines.map(o => {
+    const m = R.filter(r => r.origine === o)[0];
+    return `<div class="tuile"><span>${esc(nom(o))}</span><b>${m ? m.prix + " €" : "–"}</b><span>${m ? fdate(m.aller) + " → " + fdate(m.retour) + " · " + esc(m.compagnies.join(", ")) : "aucun vol"}</span></div>`;
+  }).join("");
+
+  const cals = p.origines.map(o => {
+    let cells = JOURS.map(j => `<div class="jh">${j}</div>`).join("") + '<div class="c vide"></div>'.repeat(decal);
+    for (let j = 1; j <= nj; j++) {
+      const iso = `${p.mois}-${String(j).padStart(2, "0")}`, r = best[o + iso];
+      cells += r
+        ? `<a class="c n${niv(r.prix)}" href="${esc(r.url)}" target="_blank" rel="noopener" title="${esc(r.compagnies.join(", "))} · ${r.dest} · retour ${fdate(r.retour)} · ${r.escales ? r.escales + " escale(s)" : "direct"}"><span class="j">${j}</span><span class="p">${r.prix} €</span></a>`
+        : `<div class="c vide"><span class="j">${j}</span><span class="p">–</span></div>`;
+    }
+    const m = Math.min(...Object.values(best).filter(r => r.origine === o).map(r => r.prix));
+    return `<section><h2>${esc(nom(o))} <small>${isFinite(m) ? "dès " + m + " € A/R" : "aucun vol trouvé"}</small></h2><div class="grille">${cells}</div></section>`;
+  }).join("");
+
+  const vus = new Set(), top = [];
+  for (const r of R) { const k = [r.origine, r.dest, r.aller, r.retour].join(); if (vus.has(k)) continue; vus.add(k); top.push(r); if (top.length >= 30) break }
+  const lignes = top.map(r => `<tr><td class="num">${r.prix} €</td><td>${esc(nom(r.origine))} → ${r.dest}</td><td>${fdate(r.aller)}</td><td>${fdate(r.retour)}</td><td>${esc(r.compagnies.join(", "))}</td><td>${r.escales ? r.escales + " escale(s)" : "direct"}</td><td>${esc(r.segments.join(" · "))}</td><td><a href="${esc(r.url)}" target="_blank" rel="noopener">voir</a></td></tr>`).join("");
+
+  $("res").innerHTML = `
+  <section>
+    <h2>Meilleurs prix par ville de départ</h2>
+    <p class="note" style="margin-top:-6px">Recherche du ${quand} · séjours de ${p.sejours.join(", ")} jours · ${data.recherches} recherches${data.sans_resultat ? " (" + data.sans_resultat + " sans réponse)" : ""}</p>
+    <div class="filtres">
+      <label><input type="checkbox" id="fdirect" ${fDirect ? "checked" : ""}> Vols directs seulement</label>
+      <label>Arrivée <select id="fdest"><option value="">les deux</option>${p.dests.map(d => `<option ${fDest === d ? "selected" : ""}>${d}</option>`).join("")}</select></label>
+    </div>
+    <div class="resume">${tuiles}</div>
+  </section>
+  ${cals}
+  <section><h2>Les meilleures combinaisons</h2><div class="tw"><table>
+    <tr><th>Prix A/R</th><th>Trajet</th><th>Aller</th><th>Retour</th><th>Compagnie (aller)</th><th>Escales</th><th>Horaires aller</th><th></th></tr>${lignes}
+  </table></div>
+  <p class="note">Prix pour 1 adulte avec bagage cabine de base : chez Pegasus, AJet ou Transavia la valise en soute est en plus. Les prix bougent : vérifie sur le site de la compagnie avant de réserver.</p></section>`;
+  $("fdirect").onchange = afficher;
+  $("fdest").onchange = afficher;
+}
+
+charger(!!token());
+</script>
+</body>
+</html>
