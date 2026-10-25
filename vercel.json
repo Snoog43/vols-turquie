@@ -1,0 +1,12 @@
+{
+  "builds": [
+    { "src": "api/dates.py", "use": "@vercel/python", "config": { "includeFiles": "api/_moteur.py" } },
+    { "src": "api/vols.py", "use": "@vercel/python", "config": { "includeFiles": "api/_moteur.py" } },
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "airports.json", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/dates", "dest": "/api/dates.py" },
+    { "src": "/api/vols", "dest": "/api/vols.py" }
+  ]
+}

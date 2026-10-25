@@ -1,8 +1,10 @@
-# Vols pas chers
+# Mes vols
 
-Site : https://snoog43.github.io/vols-turquie/
+Un Google Flights perso : calendrier des prix du mois, vols aller puis retour, plusieurs aéroports par côté,
+autocomplétion sur ~3 800 aéroports (villes et pays en français).
 
-Départ et arrivée libres (pays, ville ou code aéroport). Le bouton **Rechercher** lance le robot GitHub Actions (`.github/workflows/recherche.yml`), qui scrape Google Flights
-avec `scraper/scan.py` et enregistre `data/resultats.json`. Le robot tourne aussi tout seul chaque matin.
-
-En local : `pip install fast-flights typing_extensions` puis `python scraper/scan.py --origines PAR,MRS --mois 2027-02`.
+- `index.html` : le site. `airports.json` : la liste des aéroports (générée par `outils/aeroports.py`).
+- `api/` : fonctions Vercel en Python. `dates.py` (calendrier) et `vols.py` (liste des vols), moteur commun dans `_moteur.py`,
+  basé sur [fli](https://github.com/punitarani/fli) qui interroge l'API interne de Google Flights.
+- En local : `pip install flights` puis `python serve.py` → http://127.0.0.1:4330
+- Mise en ligne : `npx vercel --prod`
